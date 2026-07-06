@@ -35,3 +35,12 @@ def vocabulary():
 VOCAB = vocabulary()
 
 
+def tokenize(text, max_len=8):
+    ids = []
+    for w in text.lower().split():
+        if w not in VOCAB:
+            raise ValueError(f"unknown word '{w}'; the model understands: {sorted(VOCAB)}")
+        ids.append(VOCAB[w])
+    return ids[:max_len] + [0] * (max_len - len(ids))
+
+
