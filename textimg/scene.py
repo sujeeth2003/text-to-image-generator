@@ -25,3 +25,13 @@ def prompt(size, color, shape, pos):
 ALL = list(itertools.product(SIZES, COLORS, SHAPES, POSITIONS))
 
 
+def vocabulary():
+    words = ["<pad>", "a", "at"]
+    for group in (SIZES, COLORS, SHAPES, {w: 0 for p in POSITIONS for w in p.split()}):
+        words += [w for w in group if w not in words]
+    return {w: i for i, w in enumerate(words)}
+
+
+VOCAB = vocabulary()
+
+
