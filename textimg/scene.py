@@ -17,3 +17,11 @@ POSITIONS = {"top left": (9, 9), "top right": (22, 9), "bottom left": (9, 22), "
 SIZES = {"small": 4.0, "large": 7.0}
 N = 32
 
+
+def prompt(size, color, shape, pos):
+    return f"a {size} {color} {shape} at {pos}" if pos != "center" else f"a {size} {color} {shape} at center"
+
+
+ALL = list(itertools.product(SIZES, COLORS, SHAPES, POSITIONS))
+
+
