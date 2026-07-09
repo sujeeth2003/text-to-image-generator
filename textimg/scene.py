@@ -44,3 +44,25 @@ def tokenize(text, max_len=8):
     return ids[:max_len] + [0] * (max_len - len(ids))
 
 
+def _mask(shape, r):
+    yy, xx = np.mgrid[0:N, 0:N].astype(np.float32)
+    return yy, xx
+
+
+def render(size, color, shape, pos, rng=None):
+    """Returns float32 image (3, 32, 32) in [0, 1]. Small random jitter in colour, position and background."""
+    rng = rng or np.random.default_rng(0)
+    cx, cy = POSITIONS[pos]; r = SIZES[size]
+    cx += rng.uniform(-1, 1); cy += rng.uniform(-1, 1)
+    yy, xx = np.mgrid[0:N, 0:N].astype(np.float32)
+    dx, dy = xx - cx, yy - cy
+    if shape == "circle": m = dx ** 2 + dy ** 2 <= r ** 2
+    elif shape == "square": m = (np.abs(dx) <= r * 0.85) & (np.abs(dy) <= r * 0.85)
+    elif shape == "triangle": m = (dy >= -r) & (dy <= r) & (np.abs(dx) <= (dy + r) / 2)
+    else: m = ((np.abs(dx) <= r / 3) | (np.abs(dy) <= r / 3)) & (np.abs(dx) <= r) & (np.abs(dy) <= r)
+    col = np.clip(np.array(COLORS[color]) + rng.normal(0, 0.04, 3), 0, 1)
+    img = np.empty((3, N, N), np.float32)
+    bg = 0.08 + np.abs(rng.normal(0, 0.02, (N, N)))
+    for c in range(3): img[c] = np.where(m, col[c], bg)
+    return img
+
