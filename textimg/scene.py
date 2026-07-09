@@ -89,3 +89,13 @@ def attributes(img):
     else: shape = "cross"
     return size, color, shape, pos
 
+
+def make_dataset(n, holdout=(), seed=0):
+    """n random training images. `holdout` = set of (color, shape) pairs never used, to test composition."""
+    rng = np.random.default_rng(seed)
+    pool = [c for c in ALL if (c[1], c[2]) not in set(holdout)]
+    imgs, toks = [], []
+    for i in rng.integers(0, len(pool), n):
+        s, c, sh, p = pool[i]
+        imgs.append(render(s, c, sh, p, rng)); toks.append(tokenize(prompt(s, c, sh, p)))
+    return np.stack(imgs), np.array(toks, np.int64)
