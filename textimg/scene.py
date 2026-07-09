@@ -66,3 +66,26 @@ def render(size, color, shape, pos, rng=None):
     for c in range(3): img[c] = np.where(m, col[c], bg)
     return img
 
+
+def attributes(img):
+    """Independent read-out of (size, color, shape, position) from an image, or None if nothing is drawn."""
+    a = np.asarray(img, np.float32)
+    fg = a.max(0) > 0.45
+    if fg.sum() < 12: return None
+    ys, xs = np.nonzero(fg)
+    col = a[:, fg].mean(1)
+    color = min(COLORS, key=lambda k: np.linalg.norm(col - np.array(COLORS[k])))
+    cx, cy = xs.mean(), ys.mean()
+    pos = min(POSITIONS, key=lambda k: (POSITIONS[k][0] - cx) ** 2 + (POSITIONS[k][1] - cy) ** 2)
+    w, h = xs.max() - xs.min() + 1, ys.max() - ys.min() + 1
+    size = "large" if max(w, h) >= 11 else "small"
+    fill = fg.sum() / (w * h)
+    rows = fg[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    q = max(1, h // 4)
+    top = rows[:q].sum(1).mean(); bot = rows[-q:].sum(1).mean()
+    if fill > 0.9: shape = "square"
+    elif fill > 0.68: shape = "circle"
+    elif top < 0.6 * bot: shape = "triangle"
+    else: shape = "cross"
+    return size, color, shape, pos
+
