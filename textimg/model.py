@@ -13,3 +13,14 @@ from torch import nn
 
 from .scene import VOCAB
 
+
+class TextEncoder(nn.Module):
+    def __init__(self, dim=64):
+        super().__init__()
+        self.emb = nn.Embedding(len(VOCAB), dim, padding_idx=0)
+        self.proj = nn.Sequential(nn.Linear(dim, dim), nn.LeakyReLU(0.2))
+
+    def forward(self, tok):                                   # (B, L) -> (B, dim)
+        return self.proj(self.emb(tok).sum(1))
+
+
