@@ -41,3 +41,20 @@ def train(steps=6000, batch=64, n_data=12000, holdout=HOLDOUT, seed=0, log=print
     if ckpt: torch.save(G.state_dict(), ckpt)
     return G
 
+
+@torch.no_grad()
+def evaluate(G, holdout=HOLDOUT, per_prompt=4, seed=1):
+    """Generate images for every description and read the attributes back off the pixels."""
+    torch.manual_seed(seed)
+    hold = set(holdout)
+    res = {"seen": [], "held-out": []}
+    for size, color, shape, pos in ALL:
+        text = prompt(size, color, shape, pos)
+        tok = torch.tensor([tokenize(text)] * per_prompt)
+        img = ((G(torch.randn(per_prompt, G.nz), tok) + 1) / 2).clamp(0, 1).numpy()
+        for im in img:
+            a = attributes(im)
+            want = (size, color, shape, pos)
+            res["held-out" if (color, shape) in hold else "seen"].append(tuple(bool(a) and a[i] == want[i] for i in range(4)) if a else (False,) * 4)
+    return {k: np.array(v).mean(0).tolist() + [float(np.array(v).all(1).mean())] for k, v in res.items()}
+
