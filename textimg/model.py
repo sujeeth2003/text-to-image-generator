@@ -24,3 +24,18 @@ class TextEncoder(nn.Module):
         return self.proj(self.emb(tok).sum(1))
 
 
+class Generator(nn.Module):
+    def __init__(self, nz=64, td=64, ngf=96):
+        super().__init__()
+        self.enc, self.nz = TextEncoder(td), nz
+        self.fc = nn.Sequential(nn.Linear(nz + td, ngf * 4 * 4 * 4), nn.BatchNorm1d(ngf * 4 * 4 * 4), nn.ReLU(True))
+        self.ngf = ngf
+        self.net = nn.Sequential(
+            nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False), nn.BatchNorm2d(ngf * 2), nn.ReLU(True),   # 8
+            nn.ConvTranspose2d(ngf * 2, ngf, 4, 2, 1, bias=False), nn.BatchNorm2d(ngf), nn.ReLU(True),           # 16
+            nn.ConvTranspose2d(ngf, 3, 4, 2, 1), nn.Tanh())                                                       # 32
+
+    def forward(self, z, tok):
+        h = self.fc(torch.cat([z, self.enc(tok)], 1)).view(-1, self.ngf * 4, 4, 4)
+        return self.net(h)                                    # [-1, 1]
+
