@@ -39,3 +39,18 @@ class Generator(nn.Module):
         h = self.fc(torch.cat([z, self.enc(tok)], 1)).view(-1, self.ngf * 4, 4, 4)
         return self.net(h)                                    # [-1, 1]
 
+
+class Discriminator(nn.Module):
+    def __init__(self, td=64, ndf=64):
+        super().__init__()
+        self.enc = TextEncoder(td)
+        self.conv = nn.Sequential(
+            nn.Conv2d(3, ndf, 4, 2, 1), nn.LeakyReLU(0.2, True),                                                  # 16
+            nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False), nn.BatchNorm2d(ndf * 2), nn.LeakyReLU(0.2, True),      # 8
+            nn.Conv2d(ndf * 2, ndf * 4, 4, 2, 1, bias=False), nn.BatchNorm2d(ndf * 4), nn.LeakyReLU(0.2, True))  # 4
+        self.head = nn.Sequential(nn.Conv2d(ndf * 4 + td, ndf * 4, 3, 1, 1), nn.LeakyReLU(0.2, True), nn.Conv2d(ndf * 4, 1, 4, 1, 0))
+
+    def forward(self, img, tok):
+        f = self.conv(img)
+        t = self.enc(tok)[:, :, None, None].expand(-1, -1, f.shape[2], f.shape[3])
+        return self.head(torch.cat([f, t], 1)).view(-1)
