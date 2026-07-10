@@ -58,3 +58,19 @@ def evaluate(G, holdout=HOLDOUT, per_prompt=4, seed=1):
             res["held-out" if (color, shape) in hold else "seen"].append(tuple(bool(a) and a[i] == want[i] for i in range(4)) if a else (False,) * 4)
     return {k: np.array(v).mean(0).tolist() + [float(np.array(v).all(1).mean())] for k, v in res.items()}
 
+
+def main():
+    ap = argparse.ArgumentParser(); ap.add_argument("--steps", type=int, default=6000); ap.add_argument("--out", default="samples")
+    a = ap.parse_args()
+    os.makedirs(a.out, exist_ok=True)
+    G = train(a.steps, ckpt=os.path.join(a.out, "generator.pt"))
+    r = evaluate(G)
+    print(f"\nattribute accuracy read back from generated images ({len(ALL)} descriptions x 4 samples)")
+    print(f"{'':<10}{'size':>7}{'color':>7}{'shape':>7}{'position':>10}{'ALL 4':>8}")
+    for k, v in r.items():
+        print(f"{k:<10}{v[0]:>7.0%}{v[1]:>7.0%}{v[2]:>7.0%}{v[3]:>10.0%}{v[4]:>8.0%}")
+    print(f"(held-out = combinations never seen in training: {HOLDOUT})")
+
+
+if __name__ == "__main__":
+    main()
