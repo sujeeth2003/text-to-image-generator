@@ -27,3 +27,13 @@ class SceneTests(unittest.TestCase):
         with self.assertRaises(ValueError) as e: tokenize("a purple dragon")
         self.assertIn("understands", str(e.exception))
 
+    def test_holdout_combinations_are_really_absent(self):
+        _, toks = make_dataset(3000, holdout=[("blue", "triangle")], seed=1)
+        blue, tri = VOCAB["blue"], VOCAB["triangle"]
+        self.assertFalse(any(blue in t and tri in t for t in toks))
+        self.assertTrue(any(blue in t for t in toks) and any(tri in t for t in toks))    # both concepts still seen separately
+
+    def test_empty_image_has_no_attributes(self):
+        self.assertIsNone(attributes(np.full((3, 32, 32), 0.05, np.float32)))
+
+
