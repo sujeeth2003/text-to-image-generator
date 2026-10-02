@@ -27,3 +27,15 @@ What it shows:
 - **Shape is the weak attribute**, and it degrades on held-out pairs (83% -> 67%). Shapes are harder to render than colours, especially the **small cross**, which comes out as a fuzzy blob; a 32x32 cross with 2-3 pixel arms is near the model's resolution limit.
 - A GAN needed ~6,000 steps to get here; diffusion models typically train more stably, and would be the natural next step.
 
+## Use
+```bash
+pip install torch numpy matplotlib
+python -m unittest discover -s tests              # 7 tests (attribute extractor, tokenizer, held-out really absent, model behaviour, training smoke test)
+python train.py --steps 6000                      # trains, evaluates, writes samples/generator.pt
+python generate.py "a large blue triangle at top left" --n 8 --out blue.png
+python generate.py --demo
+```
+Only the words in its vocabulary work (`a`, `at`, sizes, six colours, four shapes, position words); anything else raises an error that lists what it understands. The 9 MB weights are not committed (retrain, or attach them to a GitHub Release).
+
+## Limits
+32x32 images of one object; a closed vocabulary, not natural language; the GAN sometimes blurs small shapes. It demonstrates the mechanism (embed words, condition a generator, train it to respect the text, evaluate composition), not a general text-to-image system.
